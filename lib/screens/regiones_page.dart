@@ -3,6 +3,7 @@ import 'pokemon_region_page.dart';
 import 'pokemon_favoritos_page.dart';
 
 class RegionesPage extends StatelessWidget {
+  /// Crea la pantalla con las regiones y la pestaña de favoritos.
   const RegionesPage({super.key});
 
   final List<Map<String, dynamic>> regiones = const [
@@ -54,6 +55,7 @@ class RegionesPage extends StatelessWidget {
   ];
 
   @override
+  /// Construye las pestañas y navega a la lista de Pokemon de cada region.
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2,

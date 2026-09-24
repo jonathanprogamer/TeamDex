@@ -8,6 +8,7 @@ class PokemonRegionPage extends StatefulWidget {
   final int inicio;
   final int cantidad;
 
+  /// Crea la lista regional usando el rango de IDs recibido.
   const PokemonRegionPage({
     super.key,
     required this.region,
@@ -15,6 +16,7 @@ class PokemonRegionPage extends StatefulWidget {
     required this.cantidad,
   });
 
+  /// Crea el estado que administra Pokemon, favoritos y busqueda.
   @override
   State<PokemonRegionPage> createState() => _PokemonRegionPageState();
 }
@@ -31,12 +33,16 @@ class _PokemonRegionPageState extends State<PokemonRegionPage> {
   bool cargando = true;
   String textoBusqueda = '';
 
+  /// Inicia la carga de los Pokemon de la region al montar la pantalla.
   @override
   void initState() {
     super.initState();
     cargarPokemons();
   }
 
+  /// Obtiene los Pokemon de la API y los IDs de favoritos desde SQLite.
+  /// Inicializa tanto la lista completa como la lista filtrada y muestra la
+  /// pantalla aunque una peticion falle, deteniendo el indicador de carga.
   Future<void> cargarPokemons() async {
     try {
       final datos = await api.obtenerPokemonsPorRegion(
@@ -79,6 +85,9 @@ class _PokemonRegionPageState extends State<PokemonRegionPage> {
     }
   }
 
+  /// Recarga los favoritos despues de volver del detalle de un Pokemon.
+  /// Convierte los registros de SQLite en un conjunto de IDs para actualizar
+  /// rapidamente los indicadores visuales de la cuadricula.
   Future<void> actualizarFavoritos() async {
     final datosFavoritos = await db.obtenerFavoritos();
 
@@ -103,26 +112,43 @@ class _PokemonRegionPageState extends State<PokemonRegionPage> {
     });
   }
 
-  void buscarPokemon(String texto) {
-    setState(() {
-      textoBusqueda = texto;
+/// Filtra la region por nombre o por numero exacto de Pokedex.
+/// Una cadena vacia restaura todos los Pokemon de la region.
+void buscarPokemon(String texto) {
+  setState(() {
+    textoBusqueda = texto;
 
-      if (texto.trim().isEmpty) {
-        pokemonsFiltrados = pokemons;
-      } else {
-        pokemonsFiltrados = pokemons.where((pokemon) {
-          final nombre = pokemon['nombre']
-              .toString()
-              .toLowerCase();
+    final busqueda = texto.trim().toLowerCase();
 
-          return nombre.contains(
-            texto.toLowerCase(),
-          );
-        }).toList();
+    if (busqueda.isEmpty) {
+      pokemonsFiltrados = pokemons;
+      return;
+    }
+
+    final numeroBuscado = int.tryParse(busqueda);
+
+    pokemonsFiltrados = pokemons.where((pokemon) {
+      final nombre = pokemon['nombre']
+          .toString()
+          .toLowerCase();
+
+      final id = int.tryParse(
+        pokemon['id'].toString(),
+      );
+
+      // Si el usuario escribió un número,
+      // buscamos por número de Pokédex.
+      if (numeroBuscado != null) {
+        return id == numeroBuscado;
       }
-    });
-  }
 
+      // Si escribió texto, buscamos por nombre.
+      return nombre.contains(busqueda);
+    }).toList();
+  });
+}
+
+  /// Construye el buscador y la cuadricula de Pokemon de la region.
   @override
   Widget build(BuildContext context) {
     return Scaffold(

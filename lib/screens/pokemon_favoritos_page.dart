@@ -3,8 +3,10 @@ import '../database/database_helper.dart';
 import 'pokemon_detail_page.dart';
 
 class PokemonFavoritosPage extends StatefulWidget {
+  /// Crea la pantalla que muestra los Pokemon marcados como favoritos.
   const PokemonFavoritosPage({super.key});
 
+  /// Crea el estado que carga y actualiza la lista de favoritos.
   @override
   State<PokemonFavoritosPage> createState() =>
       _PokemonFavoritosPageState();
@@ -18,12 +20,15 @@ class _PokemonFavoritosPageState
 
   bool cargando = true;
 
+  /// Solicita los favoritos cuando la pantalla se monta.
   @override
   void initState() {
     super.initState();
     cargarFavoritos();
   }
 
+  /// Consulta SQLite y actualiza la cuadricula de Pokemon favoritos.
+  /// Comprueba que la pantalla siga montada antes de cambiar su estado.
   Future<void> cargarFavoritos() async {
     final datos = await db.obtenerFavoritos();
 
@@ -37,6 +42,7 @@ class _PokemonFavoritosPageState
     });
   }
 
+  /// Construye el indicador de carga, el estado vacio o la cuadricula.
   @override
   Widget build(BuildContext context) {
     return cargando

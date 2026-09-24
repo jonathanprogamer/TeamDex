@@ -38,6 +38,7 @@ dependencies:
   path: ^1.9.1
   http: ^1.6.0
   flutter_launcher_icons: ^0.14.4
+  audioplayers: ^6.8.1
 
 dev_dependencies:
   flutter_test:

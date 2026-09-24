@@ -5,11 +5,13 @@ import '../services/poke_api_service.dart';
 class SeleccionarPokemonPage extends StatefulWidget {
   final int equipoId;
 
+  /// Crea el selector de Pokemon asociado al equipo [equipoId].
   const SeleccionarPokemonPage({
     super.key,
     required this.equipoId,
   });
 
+  /// Crea el estado que administra la lista, el filtro y las selecciones.
   @override
   State<SeleccionarPokemonPage> createState() =>
       _SeleccionarPokemonPageState();
@@ -28,12 +30,17 @@ class _SeleccionarPokemonPageState
   bool cargando = true;
   String textoBusqueda = '';
 
+  /// Inicia la carga de todos los Pokemon y los ya incluidos en el equipo.
   @override
   void initState() {
     super.initState();
     cargarDatos();
   }
 
+  /// Obtiene Pokemon desde la API y marca los que ya pertenecen al equipo.
+  ///
+  /// Si alguna consulta falla, detiene el indicador de carga y muestra un
+  /// mensaje de error sin modificar la lista parcialmente.
   Future<void> cargarDatos() async {
     try {
       final datos = await api.obtenerPokemonsPorRegion(
@@ -87,27 +94,48 @@ class _SeleccionarPokemonPageState
     }
   }
 
-  void buscarPokemon(String texto) {
-    setState(() {
-      textoBusqueda = texto;
+/// Filtra los Pokemon por nombre o por numero de Pokedex.
+///
+/// Una busqueda numerica exige coincidencia exacta del ID; una busqueda textual
+/// permite coincidencias parciales y no distingue mayusculas de minusculas.
+void buscarPokemon(String texto) {
+  setState(() {
+    textoBusqueda = texto;
 
-      if (texto.trim().isEmpty) {
-        pokemonsFiltrados = pokemons;
-        return;
+    final busqueda = texto.trim().toLowerCase();
+
+    if (busqueda.isEmpty) {
+      pokemonsFiltrados = pokemons;
+      return;
+    }
+
+    final numeroBuscado = int.tryParse(busqueda);
+
+    pokemonsFiltrados = pokemons.where((pokemon) {
+      final nombre = pokemon['nombre']
+          .toString()
+          .toLowerCase();
+
+      final id = int.tryParse(
+        pokemon['id'].toString(),
+      );
+
+      // Si el usuario escribió un número,
+      // buscamos por número de Pokédex.
+      if (numeroBuscado != null) {
+        return id == numeroBuscado;
       }
 
-      pokemonsFiltrados = pokemons.where((pokemon) {
-        final nombre = pokemon['nombre']
-            .toString()
-            .toLowerCase();
+      // Si escribió texto, buscamos por nombre.
+      return nombre.contains(busqueda);
+    }).toList();
+  });
+}
 
-        return nombre.contains(
-          texto.toLowerCase(),
-        );
-      }).toList();
-    });
-  }
-
+  /// Agrega un Pokemon al equipo respetando los limites de duplicados y cupo.
+  ///
+  /// Persiste la relacion en SQLite, actualiza el conjunto de seleccionados y
+  /// notifica al usuario cuando la operacion se completa correctamente.
   Future<void> seleccionarPokemon(
     Map<String, dynamic> pokemon,
   ) async {
@@ -169,6 +197,7 @@ class _SeleccionarPokemonPageState
     );
   }
 
+  /// Construye el buscador, contador de cupo, cuadricula y boton de salida.
   @override
   Widget build(BuildContext context) {
     return Scaffold(
